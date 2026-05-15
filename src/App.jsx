@@ -2395,17 +2395,33 @@ const InteractiveBackground = () => {
 
     const init = () => {
       particles = [];
-      const numberOfParticles = (canvas.width * canvas.height) / 8000;
+      const numberOfParticles = (window.innerWidth * window.innerHeight) / 8000;
       for (let i = 0; i < numberOfParticles; i++) {
-        let x = Math.random() * canvas.width;
-        let y = Math.random() * canvas.height;
+        let x = Math.random() * window.innerWidth;
+        let y = Math.random() * window.innerHeight;
         particles.push(new Particle(x, y));
       }
     };
 
+    let lastWidth = window.innerWidth;
+
     const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      const currentWidth = window.innerWidth;
+      const isMobile = currentWidth <= 768;
+      
+      // On mobile, ignore vertical resizes (like URL bar hiding on scroll) to prevent particle reset
+      if (isMobile && currentWidth === lastWidth && particles.length > 0) {
+        return;
+      }
+      lastWidth = currentWidth;
+
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = `${window.innerWidth}px`;
+      canvas.style.height = `${window.innerHeight}px`;
+      
+      ctx.scale(dpr, dpr);
       init();
     };
 
@@ -2424,7 +2440,7 @@ const InteractiveBackground = () => {
     window.addEventListener('mouseleave', handleMouseLeave);
 
     const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       for (let i = 0; i < particles.length; i++) {
         particles[i].draw();
         particles[i].update();
